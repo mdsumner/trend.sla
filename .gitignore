@@ -1,0 +1,12 @@
+sums/
+mapping/
+probe-sums/
+oracle-sums/
+s2_registry.parquet
+slafiles.parquet
+store_urls.txt
+time_*.txt
+manifest.json
+*.out
+*.log
+*.png
