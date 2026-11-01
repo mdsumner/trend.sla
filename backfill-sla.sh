@@ -19,19 +19,20 @@ export GDAL_CACHEMAX=256                      # MB block cache per process
 export GDAL_LOAD_EXTRA_DIM_METADATA_DELAY=0   # don't label 12k bands per open
 export GDAL_PAM_ENABLED=NO                    # no .aux sidecar probing
 
-cd "$SLURM_SUBMIT_DIR"
+## sbatch sets SLURM_SUBMIT_DIR; scrontab uses --chdir
+cd "${SLURM_SUBMIT_DIR:-$PWD}"
 BUCKET=pawsey1197:aad-derived/trend-sla
 
 bash build_catalog.sh || { echo "catalog FAILED" >&2; exit 1; }
 
-## workers must equal --cpus-per-task (~600 MB each with the cache cap)
+## workers = allocated CPUs (~600 MB each with the cache cap)
 $RUN Rscript - <<'EOF'
 library(arrow)      # FIRST, before anything loads GDAL
 library(grist)
 reg <- arrow::read_parquet("s2_registry.parquet")
 files <- arrow::read_parquet("slafiles.parquet")
 src <- stat_source("sla-cmems", files)
-backfill(src, reg, workers = 32)
+backfill(src, reg, workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "32")))
 EOF
 
 rclone copy --checksum sums/ $BUCKET/sums/ || echo "WARNING: sums copy FAILED" >&2
