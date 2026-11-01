@@ -22,19 +22,26 @@ d <- open_dataset("sums/sla-cmems") |>
   mutate(lonb = round(lon360, 1)) |>
   group_by(lonb, date) |>
   summarise(sla = sum(sumwx) / sum(sumw) * 1000, .groups = "drop")
+## subtract each day's GLOBAL mean: removes the long-term rise (~100 mm
+## since the 1993-2012 reference) and the global seasonal cycle, leaving
+## the equatorial structure itself -- what regional anomaly maps show
+gm <- open_dataset("sums/sla-cmems") |> filter(date >= start) |>
+  group_by(date) |> summarise(sumw = sum(sumw), sumwx = sum(sumwx)) |>
+  collect() |> mutate(g = sumwx / sumw * 1000)
+d <- d |> inner_join(gm[c("date", "g")], by = "date") |> mutate(sla = sla - g)
 lons <- sort(unique(d$lonb)); days <- sort(unique(d$date))
 cat(sprintf("%i equatorial cells, %i longitude columns, %s to %s\n",
             nrow(eq), length(lons), min(days), max(days)))
 dl <- diff(lons); hw <- c(dl[1], dl) / 2; hw2 <- c(dl, dl[length(dl)]) / 2
 xl <- (lons - hw)[match(d$lonb, lons)]; xr <- (lons + hw2)[match(d$lonb, lons)]
-lim <- 150
+lim <- 250
 pal <- colorRampPalette(c("#2166ac", "#67a9cf", "#f7f7f7", "#ef8a62", "#b2182b"))(101)
 cl <- pal[round((pmax(-lim, pmin(lim, d$sla)) + lim) / (2 * lim) * 100) + 1]
 png("kelvin-hovmoller.png", 900, 1100)
 par(mar = c(5, 6, 4, 2))
 plot(NA, xlim = range(c(xl, xr)), ylim = rev(range(days)), axes = FALSE,
      xlab = "longitude", ylab = "",
-     main = sprintf("Equatorial Pacific sea level anomaly (mm), %s to %s",
+     main = sprintf("Equatorial Pacific sea level anomaly minus global mean (mm), %s to %s",
                     min(days), max(days)))
 rect(xl, as.numeric(d$date) - 0.5, xr, as.numeric(d$date) + 0.5,
      col = cl, border = NA)
