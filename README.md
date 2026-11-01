@@ -69,6 +69,18 @@ registry, catalog, `manifest.json`). Public read:
 (chunking, raw HTTP, open vs read cost, band-labelling cost, engine
 read under the limits).
 
+## First light: the 2026 Kelvin wave
+
+![Equatorial Pacific sea level anomaly minus global mean, Oct 2025 to Nov 2026](docs/kelvin-hovmoller.png)
+
+Daily SLA minus the daily global mean, S2 cells within 3 deg of the
+equator across the Pacific (`hovmoller.sh`). The diagonal band from
+January to May is the equatorial Kelvin wave that set off the 2026
+El Nino: it crosses 160E in mid-March and reaches the South American
+coast (90W) in early May, ~12,000 km in ~50 days, about 2.8 m/s, the
+expected speed of a first-mode Kelvin wave. From July the east
+Pacific stays high and the west drains: the El Nino seesaw.
+
 ## Checks
 
 - `oracle.sh`: 1997-11-15, peak of the 1997/98 El Nino. Passed: the
