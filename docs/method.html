@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trend.sla - method</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --surface-2: #f0efec;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a897f;
+    --series-1: #2a78d6; --grid: #e4e3de; --border: #d8d7d0;
+    --accent-warm: #e34948;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --surface-2: #262624;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+      --series-1: #3987e5; --grid: #32322f; --border: #3d3d39;
+      --accent-warm: #e05252;
+    }
+  }
+  html, body { margin: 0; }
+  .viz-root { background: var(--surface-1); color: var(--text-primary);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    min-height: 100vh; padding: 20px 24px 48px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  h1 { font-size: 20px; margin: 0 0 2px; font-weight: 650; padding-bottom: 8px; }
+  header { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tabs { display: flex; gap: 4px; align-items: flex-end; flex: 1; }
+  .tabs a { padding: 7px 14px; color: var(--text-secondary);
+    text-decoration: none; font-size: 13px; border: 1px solid transparent;
+    border-radius: 8px 8px 0 0; margin-bottom: -1px; white-space: nowrap; }
+  .tabs a:hover { color: var(--text-primary); }
+  .tabs a.on { background: var(--surface-1); border-color: var(--border);
+    border-bottom-color: var(--surface-1); color: var(--text-primary);
+    font-weight: 600; }
+  .tabs a.ext { margin-left: auto; align-self: center; margin-bottom: 7px;
+    border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px;
+    font-size: 12px; color: var(--series-1); background: var(--surface-2); }
+  .tabs a.ext::after { content: " \2197"; }
+  .tabs a.ext:hover { border-color: var(--series-1); }
+  .tabs a.gh { align-self: center; margin-bottom: 7px; margin-left: 8px;
+    display: inline-flex; padding: 4px; color: var(--text-secondary);
+    border: none; }
+  .tabs a.gh:hover { color: var(--text-primary); }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 2px 0 24px; }
+
+  h2 { font-size: 16px; font-weight: 650; margin: 34px 0 8px; }
+  p { margin: 10px 0; max-width: 72ch; }
+  a { color: var(--series-1); }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px; }
+  figure { margin: 18px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--text-muted); font-size: 12.5px; margin-top: 6px;
+    max-width: 72ch; }
+  .card { background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; margin: 16px 0; }
+  .card .mono { font-size: 13.5px; }
+  .card p { margin: 6px 0; }
+  table { border-collapse: collapse; font-size: 13px; margin: 12px 0;
+    font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 5px 16px 5px 0;
+    border-bottom: 1px solid var(--grid); }
+  th { color: var(--text-secondary); font-weight: 600; font-size: 12px;
+    letter-spacing: .03em; text-transform: uppercase; }
+  footer { color: var(--text-muted); font-size: 12px; margin-top: 40px; }
+
+  /* diagram strokes/fills via theme vars */
+  .d-grid { stroke: var(--grid); stroke-width: 1; }
+  .d-cell { stroke: var(--accent-warm); stroke-width: 2; fill: none; }
+  .d-box { fill: var(--surface-2); stroke: var(--border); rx: 8; }
+  .d-lab { fill: var(--text-secondary); font: 12px system-ui, sans-serif; }
+  .d-lab2 { fill: var(--text-muted); font: 11px system-ui, sans-serif; }
+  .d-mono { fill: var(--text-primary);
+    font: 11.5px ui-monospace, Menlo, Consolas, monospace; }
+  .d-arrow { stroke: var(--text-muted); stroke-width: 1.3; fill: none;
+    marker-end: url(#arr); }
+</style>
+</head>
+<body>
+<div class="viz-root"><div class="wrap">
+<header>
+  <h1>trend.sla</h1>
+  <nav class="tabs"><a href="index.html">Status</a><a href="map.html">Explorer</a><a href="method.html" class="on">Method</a><a href="mechanics.html">Mechanics</a><a class="ext" href="https://mdsumner.github.io/trend.sst/" title="the SST deployment, a separate site">sibling: trend.sst</a><a class="gh" href="https://github.com/mdsumner/trend.sla" title="source repository" aria-label="GitHub repository"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a></nav>
+</header>
+<p class="sub">How daily sea level grids become the cell sums this site
+is computed from.</p>
+
+<h2>Same method as trend.sst</h2>
+<p>trend.sla is the second deployment of
+<a href="https://github.com/hypertidy/grist">grist</a>, the engine
+extracted from trend.sst. The summarization is identical: every source
+pixel is assigned whole to the S2 level-5 cell containing its centre,
+nothing is warped or resampled, and each cell keeps four sums per day
+(<span class="mono">n</span>, <span class="mono">sumw</span>,
+<span class="mono">sumwx</span>, <span class="mono">sumwx2</span>)
+from which the mean and variance of any union of cells and days follow
+exactly. The full explanation, with figures and references, is on the
+<a href="https://mdsumner.github.io/trend.sst/method.html">trend.sst
+Method page</a>.</p>
+
+<h2>The source</h2>
+<p>Copernicus Marine global gridded L4 sea surface heights (DUACS
+multi-mission altimetry), daily on a 0.125&deg; grid, variable
+<span class="mono">sla</span>: sea level anomaly relative to the
+product's 1993&ndash;2012 reference. A level-5 cell holds roughly
+5,000&ndash;6,500 of these pixels. grist reads the public ARCO Zarr
+stores directly, with no download.</p>
+<p>Two products are interleaved into one daily record: the
+delayed-time reprocessing wherever it exists (1993 to a few months
+ago), then near-real-time after it. When the delayed-time record
+extends, or a near-real-time day is reissued, grist sees that date's
+source change and recomputes exactly that date. The near-real-time
+tail is marked provisional on the Status page.</p>
+
+<h2>Units</h2>
+<p>The stored sums are in metres, as in the source. This site shows
+millimetres, and trends per year (mm/yr), the usual convention for sea
+level. Code from the Explorer's <i>Get the data</i> reads the sums
+directly, so its means are in metres.</p>
+
+<h2>Checks</h2>
+<p>Two independent checks, both reproducible from the repository:</p>
+<table>
+  <tr><th>check</th><th>expectation</th><th>result</th></tr>
+  <tr><td>one date, 1997-11-15</td>
+      <td>peak of the 1997/98 El Ni&ntilde;o: positive anomaly along the
+      central-eastern equatorial Pacific, negative in the west</td>
+      <td>passed (also shows the late-1997 Indian Ocean Dipole)</td></tr>
+  <tr><td>daily global mean, whole record</td>
+      <td>the published altimetry sea level rate, about
+      3.1&ndash;3.3 mm/yr</td>
+      <td>3.16 mm/yr, with the expected acceleration, annual cycle and
+      El Ni&ntilde;o peaks</td></tr>
+</table>
+<p>One open question is recorded rather than hidden: the global mean
+averages about +25 mm over 1993&ndash;2012 rather than about zero,
+which may be the product's reference convention and is still to be
+confirmed against its documentation.</p>
+
+<h2>Acknowledgments</h2>
+<p>Data: E.U. Copernicus Marine Service Information. This work uses
+resources of the Pawsey Supercomputing Research Centre, with funding
+from the Australian Government and the Government of Western
+Australia: the backfills run on Pawsey systems and the sums are served
+from Pawsey object storage.</p>
+
+<footer>trend.sla &middot; sums are per-date Parquet of
+(cell, n, sumw, sumwx, sumwx2) on S2 level-5 cells &middot;
+<a href="https://github.com/mdsumner/trend.sla">source</a></footer>
+</div></div>
+</body>
+</html>
