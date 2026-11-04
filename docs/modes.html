@@ -145,7 +145,7 @@ global series.</p>
 
 <script type="application/json" id="cfg">{"sources": [{"id": "sla-cmems", "label": "CMEMS SLA"}],
  "mode1": "its pattern is the equatorial Pacific seesaw, high in the east and low in the west during El Nino",
- "oni": "Independent check: tools/check_oni.py correlates mode 1 with NOAA's Oceanic Nino Index (from sea surface temperature); run it where NOAA is reachable."}</script>
+ "oni": "Independent check (tools/check_oni.py, run 2026-11-05): with the time series smoothed to 3 months, mode 1 correlates 0.94 with NOAA's Oceanic Nino Index, which is computed from sea surface temperature (ERSST v5), peaking at lag 0. That is higher than its 0.88 with sea level in the Nino 3.4 box itself: the mode captures basin-wide ENSO, not one box."}</script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
