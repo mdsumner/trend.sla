@@ -12,3 +12,6 @@ RUN="singularity exec $MYSOFTWARE/sif_lib/gdal-r-python-extras_2026-10-25.sif"
 export R_LIBS_USER=${R_LIBS_USER:-$MYSOFTWARE/r-lib}
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 $RUN Rscript data-raw/export_site.R . || { echo "export FAILED" >&2; exit 1; }
+## modes page: EOFs of the monthly export just written (numpy only);
+## a failure here leaves the previous eof-sla-cmems.json in place
+$RUN python3 data-raw/eof.py docs/data || echo "WARNING: eof.py FAILED" >&2

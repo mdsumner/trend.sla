@@ -81,6 +81,22 @@ coast (90W) in early May, ~12,000 km in ~50 days, about 2.8 m/s, the
 expected speed of a first-mode Kelvin wave. From July the east
 Pacific stays high and the west drains: the El Nino seesaw.
 
+## Modes: EOFs of the record
+
+`data-raw/eof.py` computes empirical orthogonal functions of monthly SLA
+from the site's own monthly export (itself a projection of the sums), and
+writes `docs/data/eof-sla-cmems.json` for the Modes page
+(`docs/modes.html`). Per cell, the mean, a linear trend and the mean
+seasonal cycle are removed; cells are equally weighted. `export_site.sh`
+runs it after each export. It needs only numpy and runs anywhere the
+repo is checked out:
+
+    python3 data-raw/eof.py docs/data
+
+First result (1993-01..2026-10, 4891 cells): mode 1 is ENSO, 18% of
+variance, correlation 0.88 with Nino 3.4 box SLA, peaking at +3.4 sd in
+1997-12 and +3.5 sd in 2026-10.
+
 ## Checks
 
 - `oracle.sh`: 1997-11-15, peak of the 1997/98 El Nino. Passed: the
@@ -92,6 +108,11 @@ Pacific stays high and the west drains: the El Nino seesaw.
   1997/98 and 2015/16 peaks. Open question: the series averages about
   +25 mm over 1993-2012 rather than ~0; to check against the product's
   reference convention before encoding as an expectation.
+- Caspian Sea (found by the EOF analysis): the CMEMS grid includes it,
+  and its series falls ~1.5 m from 1995 to 2021, then rises ~1.2 m from
+  2022-09, which looks like a processing change rather than a real
+  signal. Masked in `eof.py`; the global and regional series still
+  include its 14 cells (open: exclude it in `export_site.R`).
 
 ## Acknowledgments
 
