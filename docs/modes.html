@@ -95,7 +95,7 @@ series.</p>
 
 <div class="panel">
   <canvas id="map" aria-label="map of the selected mode's pattern"></canvas>
-  <div class="legend"><span id="lo"></span><canvas id="bar" width="180" height="10"></canvas><span id="hi"></span><span>mm per standard deviation of the time series</span></div>
+  <div class="legend"><span id="lo"></span><canvas id="bar" width="180" height="10"></canvas><span id="hi"></span><span id="unit">mm per standard deviation of the time series</span></div>
 </div>
 
 <h2 id="pctitle">Time series</h2>
@@ -172,7 +172,7 @@ global series.</p>
   function drawMap() {
     const [g, w, h] = fit($('map'));
     const sx = w / 360, sy = h / 180, px = (x) => x * sx, py = (lat) => (90 - lat) * sy;
-    const pat = E.modes[sel].pattern_mm, s = scaleOf(pat);
+    const pat = E.modes[sel].pattern, s = scaleOf(pat);
     g.clearRect(0, 0, w, h);
     C.cells.forEach((c, i) => {
       const v = pat[i];
@@ -205,6 +205,7 @@ global series.</p>
     // Nino 3.4 box
     g.strokeStyle = css('--text-primary'); g.lineWidth = 1; g.setLineDash([3, 3]);
     g.strokeRect(px(X(-170)), py(5), px(50), py(-5) - py(5)); g.setLineDash([]);
+    $('unit').textContent = E.unit + ' per standard deviation of the time series';
     $('lo').textContent = '-' + s; $('hi').textContent = '+' + s;
     const bg = $('bar').getContext('2d');
     for (let i = 0; i < 180; i++) { bg.fillStyle = ramp(i / 89.5 - 1); bg.fillRect(i, 0, 1, 10); }

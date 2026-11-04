@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""data-raw/eof.py -- empirical orthogonal functions (EOFs) of monthly SLA.
+"""data-raw/eof.py -- empirical orthogonal functions (EOFs) of monthly means.
 
-  python3 data-raw/eof.py [data_dir] [n_modes]
+  python3 data-raw/eof.py [data_dir] [source] [unit] [n_modes]
 
-Reads the site's own exports in data_dir (default docs/data):
-  cells-sla-cmems.json   cell order, lon/lat, month labels
-  monthly-sla-cmems.bin  Float32 cell x month means (mm), cell-major
+  defaults: docs/data, sla-cmems, mm, 6
+
+Reads the site's own exports in data_dir:
+  cells-<source>.json    cell order, lon/lat, month labels
+  monthly-<source>.bin   Float32 cell x month means, cell-major
   status.json            last date, to drop a partial final month
-and writes data_dir/eof-sla-cmems.json for docs/modes.html.
+and writes data_dir/eof-<source>.json for docs/modes.html. The same
+script serves trend.sla (sla-cmems, mm) and trend.sst (oisst, ghrsst,
+degC); keep the two copies identical.
 
 The monthly means are exact projections of the grist sums (ratio of
 summed sumwx to summed sumw per cell and month), so this is EOF analysis
@@ -21,9 +25,9 @@ Method, all per cell:
      offsets), fitted jointly by least squares
   4. SVD of the month x cell anomaly matrix, cells equally weighted (S2
      level-5 cells are roughly equal area)
-Each mode is reported as a pattern in mm per standard deviation of its
-principal component (PC), and the PC in standard units, so pattern * PC
-is the mode's contribution in mm. Sign convention: mode 1 is positive
+Each mode is reported as a pattern in the source's unit per standard
+deviation of its principal component (PC), and the PC in standard units,
+so pattern * PC is the mode's contribution in that unit. Sign convention: mode 1 is positive
 where the Nino 3.4 box loads; other modes are positive at their largest
 loading.
 """
@@ -33,9 +37,9 @@ import sys
 
 import numpy as np
 
-SRC = "sla-cmems"
 ## cells to exclude: (label, lat_min, lat_max, lon360_min, lon360_max).
-## The Caspian is in the CMEMS grid; its level history (a ~1.5 m fall
+## Inland water is in some product grids but is not ocean. The Caspian
+## is in the CMEMS grid; its level history (a ~1.5 m fall
 ## 1995-2021, then a ~1.2 m rise from 2022-09) dominated the first
 ## unmasked analysis as a mode of its own (12% of variance).
 MASKS = [("Caspian Sea", 36.0, 48.0, 46.0, 56.0)]
@@ -50,8 +54,11 @@ def month_end(iso):
 
 
 def main():
-    data = sys.argv[1] if len(sys.argv) > 1 else "docs/data"
-    k = int(sys.argv[2]) if len(sys.argv) > 2 else 6
+    a = sys.argv[1:]
+    data = a[0] if len(a) > 0 else "docs/data"
+    SRC = a[1] if len(a) > 1 else "sla-cmems"
+    unit = a[2] if len(a) > 2 else "mm"
+    k = int(a[3]) if len(a) > 3 else 6
     meta = json.load(open(os.path.join(data, "cells-%s.json" % SRC)))
     status = json.load(open(os.path.join(data, "status.json")))
     cells = meta["cells"]
@@ -93,7 +100,7 @@ def main():
     for j in range(k):
         pc = U[:, j] * S[j]
         sd = pc.std()
-        pat = Vt[j] * sd                          # mm per PC standard deviation
+        pat = Vt[j] * sd                          # unit per PC standard deviation
         sign = np.sign(pat[box].mean()) if j == 0 else np.sign(pat[np.argmax(np.abs(pat))])
         sign = sign or 1.0
         pc, pat = pc * sign / sd, pat * sign
@@ -104,14 +111,16 @@ def main():
             "mode": j + 1,
             "variance": round(float(var[j]), 4),
             "r_nino34_box": round(float(np.corrcoef(pc, n34)[0, 1]), 3),
+            "pc_raw_sd": round(float(sd), 4),
             "pc": [round(float(v), 3) for v in pc],
-            "pattern_mm": full,
+            "pattern": full,
         })
-        print("mode %i: %.1f%% of variance, r with Nino 3.4 box SLA %.2f"
+        print("mode %i: %.1f%% of variance, r with Nino 3.4 box anomaly %.2f"
               % (j + 1, 100 * var[j], modes[-1]["r_nino34_box"]))
 
     out = {
         "source": SRC,
+        "unit": unit,
         "months": months,
         "cells_used": int(keep.sum()),
         "masked": masked,
