@@ -90,6 +90,7 @@
 anomaly: the record's dominant patterns of variability, each with its time
 series.</p>
 
+<div class="modes" id="srcs" role="group" aria-label="source" hidden></div>
 <div class="modes" id="modes" role="group" aria-label="mode"></div>
 <p class="stat" id="stat"></p>
 
@@ -142,11 +143,15 @@ global series.</p>
 <a href="https://github.com/mdsumner/trend.sla">source</a></footer>
 </div></div>
 
+<script type="application/json" id="cfg">{"sources": [{"id": "sla-cmems", "label": "CMEMS SLA"}],
+ "mode1": "its pattern is the equatorial Pacific seesaw, high in the east and low in the west during El Nino",
+ "oni": "Independent check: tools/check_oni.py correlates mode 1 with NOAA's Oceanic Nino Index (from sea surface temperature); run it where NOAA is reachable."}</script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
   const css = (v) => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(v).trim();
-  let E, C, coast, sel = 0;
+  const CFG = JSON.parse(document.getElementById('cfg').textContent);
+  let E, C, coast, sel = 0, src = CFG.sources[0].id;
   const LON0 = 20;                      // map centred on the Pacific (200E)
   const X = (lon) => ((lon - LON0) % 360 + 360) % 360;
 
@@ -165,7 +170,7 @@ global series.</p>
   function scaleOf(p) {
     const a = p.filter(v => v !== null).map(Math.abs).sort((x, y) => x - y);
     const q = a[Math.floor(a.length * 0.98)] || 1;
-    const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200];
+    const nice = [0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200];
     return nice.find(n => n >= q) || q;
   }
 
@@ -245,7 +250,7 @@ global series.</p>
     const m = E.modes[sel];
     document.querySelectorAll('#modes button').forEach((b, i) => b.classList.toggle('on', i === sel));
     $('stat').textContent = 'Mode ' + m.mode + ': ' + (100 * m.variance).toFixed(1) +
-      '% of variance; correlation with Nino 3.4 box SLA ' + m.r_nino34_box.toFixed(2) + '.';
+      '% of variance; correlation with the Nino 3.4 box anomaly ' + m.r_nino34_box.toFixed(2) + '.';
     $('pctitle').textContent = 'Mode ' + m.mode + ' time series (standard units)';
     drawMap(); drawPC();
   }
@@ -262,26 +267,38 @@ global series.</p>
     const m1 = E.modes[0], yrs = {};
     E.months.forEach((m, i) => { const y = m.slice(0, 4); (yrs[y] = yrs[y] || []).push(m1.pc[i]); });
     const peak = (a, b) => { let best = null; E.months.forEach((m, i) => { if (m >= a && m <= b && (best === null || m1.pc[i] > m1.pc[best])) best = i; }); return best; };
-    const rows = [['1997/98 El Nino', '1997-06', '1998-06'], ['2015/16 El Nino', '2015-06', '2016-06'], ['2023/24 El Nino', '2023-04', '2024-04'], ['2026 El Nino', '2026-01', '2026-12']]
+    const rows = [['1982/83 El Nino', '1982-06', '1983-06'], ['1997/98 El Nino', '1997-06', '1998-06'], ['2015/16 El Nino', '2015-06', '2016-06'], ['2023/24 El Nino', '2023-04', '2024-04'], ['2026 El Nino', '2026-01', '2026-12']]
+      .filter(([lab, a, b]) => a >= E.months[0] && a <= E.months[E.months.length - 1])
       .map(([lab, a, b]) => { const i = peak(a, b); return '<tr><td>' + lab + '</td><td class="mono">' + E.months[i] + '</td><td class="mono">' + m1.pc[i].toFixed(2) + ' sd</td></tr>'; }).join('');
     $('checks').innerHTML =
       '<p>Mode 1 is ENSO: its time series correlates ' + m1.r_nino34_box.toFixed(2) +
-      ' with the Nino 3.4 box sea level anomaly, and its pattern is the equatorial Pacific seesaw, high in the east and low in the west during El Nino. Its peaks in each El Nino window:</p>' +
+      ' with the Nino 3.4 box anomaly' + (CFG.mode1 ? ', and ' + CFG.mode1 : '') + '. Its peaks in each El Nino window:</p>' +
       '<table style="border-collapse:collapse;font-size:13px">' + rows + '</table>' +
-      '<p>Not yet done: correlation with an independent index, NOAA\'s Oceanic Nino Index from sea surface temperature.</p>' +
+      (CFG.oni ? '<p>' + CFG.oni + '</p>' : '') +
+      '<p>Masked: ' + (E.masked.filter(x => x.cells > 0).map(x => x.label + ' (' + x.cells + ' cells)').join(', ') || 'none') + '.</p>' +
       '<p class="mono" style="font-size:12px;color:var(--text-muted)">' + E.cells_used + ' cells x ' + E.months.length + ' months, ' + E.months[0] + ' to ' + E.months[E.months.length - 1] + '; ' + E.method + '.</p>';
   }
 
-  Promise.all([fetch('data/eof-sla-cmems.json').then(r => r.json()), fetch('data/cells-sla-cmems.json').then(r => r.json()),
-               fetch('data/coast-110m.json').then(r => r.json()).catch(() => null)])
-    .then(([e, c, k]) => {
-      E = e; C = c; coast = k;
-      $('modes').innerHTML = E.modes.map((m, i) => '<button type="button">Mode ' + m.mode + ' <span style="color:var(--text-muted)">' + (100 * m.variance).toFixed(1) + '%</span></button>').join('');
-      document.querySelectorAll('#modes button').forEach((b, i) => b.addEventListener('click', () => { sel = i; draw(); }));
-      checks(); draw();
-      let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(draw, 150); });
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
-    });
+  fetch('data/coast-110m.json').then(r => r.json()).catch(() => null).then(k => { coast = k; load(src); });
+  function load(id) {
+    src = id;
+    Promise.all([fetch('data/eof-' + id + '.json').then(r => r.json()), fetch('data/cells-' + id + '.json').then(r => r.json())])
+      .then(([e, c]) => {
+        E = e; C = c;
+        if (sel >= E.modes.length) sel = 0;
+        $('modes').innerHTML = E.modes.map((m, i) => '<button type="button">Mode ' + m.mode + ' <span style="color:var(--text-muted)">' + (100 * m.variance).toFixed(1) + '%</span></button>').join('');
+        document.querySelectorAll('#modes button').forEach((b, i) => b.addEventListener('click', () => { sel = i; draw(); }));
+        document.querySelectorAll('#srcs button').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+        checks(); draw();
+      });
+  }
+  if (CFG.sources.length > 1) {
+    $('srcs').hidden = false;
+    $('srcs').innerHTML = CFG.sources.map(x => '<button type="button" data-id="' + x.id + '">' + x.label + '</button>').join('');
+    document.querySelectorAll('#srcs button').forEach(b => b.addEventListener('click', () => load(b.dataset.id)));
+  }
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => E && draw(), 150); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => E && draw());
 })();
 </script>
 </body>
