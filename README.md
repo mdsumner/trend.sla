@@ -1,5 +1,9 @@
 # trend.sla
 
+Part of the [trend family](https://australianantarcticdivision.github.io/trend/) of ocean climate records
+(sea surface temperature, sea level, chlorophyll-a, sea ice), all listed
+on that page.
+
 Daily sea level anomaly (SLA) reduced to mergeable sufficient
 statistics on S2 level-5 cells: one Parquet file per date of
 `(cell, n, sumw, sumwx, sumwx2)`, from 1993 to about one day behind
