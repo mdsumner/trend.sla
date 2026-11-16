@@ -1,7 +1,8 @@
-## daily refresh of trend.sla on Setonix. Install with:  scrontab scrontab.txt
-## FIRST save what is installed:  scrontab -l > ~/scrontab-backup-$(date +%F).txt
-## (replaces your WHOLE scrontab -- if you have other entries, merge them
-## in with  scrontab -e  instead). Times are Setonix local (AWST).
+## daily refresh of trend.sla on Setonix. Times are Setonix local (AWST).
+## A scrontab FRAGMENT: never `scrontab` this file directly (that replaces
+## the whole per-user crontab). Select it and install with scron from
+## AustralianAntarcticDivision/trend (tools/scron):
+##   scron enable NN-<repo> <this file>; scron diff; scron install
 ## A daily run touches 1-3 dates, so it takes a small allocation, not a
 ## node: workers follow --cpus-per-task automatically. data-raw/daily.sh
 ## backfills, exports the site and pushes docs/data (needs a deploy key).
