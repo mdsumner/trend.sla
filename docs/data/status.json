@@ -1,12 +1,12 @@
 {
-  "generated": "2026-11-16T22:18:53Z",
+  "generated": "2026-11-17T22:18:52Z",
   "sources": {
     "sla-cmems": {
       "first": "1993-01-01",
-      "last": "2026-11-16",
-      "n": 12373,
+      "last": "2026-11-17",
+      "n": 12374,
       "gaps": [],
-      "provisional_days": 185
+      "provisional_days": 186
     }
   }
 }
